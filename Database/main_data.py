@@ -1,59 +1,59 @@
-import pymongo
 import pandas as pd
-import datetime
-import hashlib
 import os
+from dotenv import load_dotenv
+from supabase import Client, create_client
 
-#importing db crediantials
-db_url: str = os.getenv("MONGO_URL")
-db_user: str = os.getenv("MONGO_USERNAME")
-db_pass: str = os.getenv("MONGO_PASSWORD")
-db_name: str = os.getenv("MONGO_DB_NAME")
+load_dotenv()
 
-# altering the db url for parameters
-db_url = db_url.replace('<USERNAME>', db_user)
-db_url = db_url.replace('<PASSWORD>', db_pass)
-db_url = db_url.replace('<DATABASE>', db_name)
+# importing db credentials
+url = str(os.getenv("SUPABASE_URL"))
+key = str(os.getenv("SUPABASE_KEY"))
+supabase: Client = create_client(url, key)
 
-#db connection
-myclient = pymongo.MongoClient(db_url)
-mydb = myclient["Emailer-Data"]
-mycol = mydb["acc-data"]
 
 def X_data():
-    cursor = mycol.find({}, {"Message": 1})
-    data_list = [document["Message"] for document in cursor]
-    data_series = pd.Series(data_list)
+    response = supabase.table('main_data').select("Message").execute()
+    data_series = pd.Series([d['Message'] for d in response.data])
     return data_series
 
 
 def Y_data():
-    cursor = mycol.find({}, {"Category": 1})
-    data_list = [document["Category"] for document in cursor]
-    data_series = pd.Series(data_list)
+    response = supabase.table('main_data').select("Category").execute()
+    data_series = pd.Series([d['Category'] for d in response.data])
     return data_series
 
 
 def save_acc(acc_train, acc_test, X_train, X_test):
-    date = datetime.datetime.now()
-    mycol = mydb["acc-data"]
-    mycol.insert_one(
-        {'date': date, 'Accuracy-Train': acc_train, 'Accuracy-Test': acc_test, 'Train-size': X_train, 'Test-size': X_test})
+    supabase.table('acc_data').insert(
+        {"Accuracy_Train": acc_train, "Accuracy_Test": acc_test, "Train_size": X_train, "Test_size": X_test}).execute()
+
+
+def get_acc():
+    response = supabase.table('acc_data').select("*").execute()
+    return response.data[0]
 
 
 def check_auth(username, password):
-    password = password.encode()
-    sha256 = hashlib.sha256()
-    sha256.update(password)
-    mycol = mydb["auth-data"]
-    token = sha256.hexdigest()
-    user = mycol.find_one({'username': username})
-    if user and 'password' in user and user['password'] == token:
+    response = supabase.table('auth-data').select('*').execute()
+    user = response.data[0]['username']
+    pwd = response.data[0]['password']
+    if user == username and password == pwd:
         return True
     else:
         return False
 
 
 def save_temp(cat, msg):
-    mycol = mydb["temp-data"]
-    return bool(mycol.insert_one({'Category': cat, 'Message': msg}))
+    if supabase.table('temp-data').insert({"Category": cat, "Message": msg}).execute():
+        return True
+    else:
+        return False
+
+
+def temp_to_main():
+    response = supabase.table('temp-data').select('*').execute()
+    for x in response.data:
+        supabase.table('test_main_data').insert({"Category": x['Category'], "Message": x['Message']}).execute()
+
+
+
