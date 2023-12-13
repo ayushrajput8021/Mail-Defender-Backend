@@ -1,88 +1,57 @@
 from dotenv import load_dotenv
-from flask import Flask, request, Response, json
+from flask import Flask
 
 load_dotenv()
-from spam_predictor import *
 from flask_cors import CORS
 from model_trainer import *
+from Controllers.home_page import *
+from Controllers.login import admin_login
+from Controllers.get_acc import get_acc
+from Controllers.add_temp import add_temp
+from Controllers.predict import receive_data
+from Controllers.train import train_data
+from Controllers.error import page_not_found
 
 app = Flask(__name__)
 CORS(app)
 
 
 @app.route('/', methods=['GET'])
-def home_page():
-    return '<h1>Home Page</h1>'
+def route_home():
+    return home_page()
 
 
 @app.route('/login', methods=['POST'])
-def admin_login():
-    data = request.get_json()
-    if check_auth(data['username'], data['password']):
-        res_data = {'Status': 'Authenticated'}
-    else:
-        res_data = {'Status': 'Not Authenticated'}
-    res_send = app.response_class(
-        response=json.dumps(res_data),
-        status=200,
-        mimetype='application/json'
-    )
-    return res_send
+def route_admin_login():
+    return admin_login()
 
 
 @app.route('/get-acc', methods=['GET'])
-def get_accu():
-    res_data = get_acc()
-    res_send = app.response_class(
-        response=json.dumps(res_data),
-        status=200,
-        mimetype='application/json'
-    )
-    return res_send
-
+def route_get_accu():
+    return get_acc()
 
 
 @app.route('/predict', methods=['POST'])
-def receive_data():
-    data = request.get_json()
-    response_data = Predict(data['message'])
-    response = int(str(response_data[0]))
-    res_data = {'Status': 'Success', 'Response': 'Spam' if response == 0 else 'Ham'}
-    res_send = app.response_class(
-        response=json.dumps(res_data),
-        status=200,
-        mimetype='application/json'
-    )
-    return res_send
+def route_receive_data():
+    return receive_data()
 
 
 @app.route('/train', methods=['POST'])
-def train_data():
-    data = request.get_json()
-    username = data['id']
-    password = data['pass']
-    if check_auth(username, password):
-        train()
-        return Response("Trained", status=400, mimetype='application/json')
-    else:
-        return Response({'Status': 'Not Authenticated'}, status=401, mimetype='application/json')
+def route_train_data():
+    return train_data()
 
 
 @app.route('/add-temp', methods=['POST'])
-def add_temp():
-    data = request.get_json()
-    if save_temp(data['Category'], data['Message']):
-        return 'Saved to DB'
-    else:
-        return 'Error in saving to DB'
+def route_add_temp():
+    return add_temp()
 
 
 @app.errorhandler(404)
-def page_not_found(e):
-    return Response("404", status=404, mimetype='application/text')
+def route_page_not_found(e):
+    return page_not_found(e)
 
 
 port = os.getenv("PORT")
 
 if __name__ == '__main__':
-    app.run(port=8000)
+    app.run()
