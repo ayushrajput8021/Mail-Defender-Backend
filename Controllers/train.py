@@ -1,6 +1,6 @@
 from flask import Flask, request, json
 
-from Database.main_data import check_auth
+from Database.main_data import check_auth,temp_to_main
 from model_trainer import train
 
 app = Flask(__name__)
@@ -8,9 +8,10 @@ app = Flask(__name__)
 
 def train_data():
     data = request.get_json()
-    username = data['id']
-    password = data['pass']
+    username = data['username']
+    password = data['password']
     if check_auth(username, password):
+        temp_to_main()
         train()
         res_data = {'Status': 'Success', 'Message': 'Trained'}
         status = 200

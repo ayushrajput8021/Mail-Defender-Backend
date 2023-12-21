@@ -30,7 +30,16 @@ def save_acc(acc_train, acc_test, X_train, X_test):
 
 def get_acc():
     response = supabase.table('acc_data').select("*").execute()
-    return response.data[0]
+    for entry in response.data:
+        if 'created_at' in entry:
+            created_at = entry["created_at"]
+            date, time = created_at.split('T')
+            time = time.split('.')
+            entry.pop('created_at', None)
+            entry.pop('id', None)
+            entry['Date'] = date
+            entry['Time'] = time[0]
+    return response.data
 
 
 def check_auth(username, password):
@@ -50,10 +59,15 @@ def save_temp(cat, msg):
         return False
 
 
+def get_temp_data():
+    response = supabase.table('temp-data').select('*').execute()
+    for entry in response.data:
+        entry.pop('id', None)
+    return response.data
+
+
 def temp_to_main():
     response = supabase.table('temp-data').select('*').execute()
     for x in response.data:
         supabase.table('test_main_data').insert({"Category": x['Category'], "Message": x['Message']}).execute()
-
-
 

@@ -9,6 +9,7 @@ from Supabase.bucket import *
 
 
 def train():
+
     # Data Collection and Pre Processing
     X = X_data()
     Y = Y_data()

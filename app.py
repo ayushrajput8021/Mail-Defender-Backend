@@ -11,7 +11,7 @@ from Controllers.add_temp import add_temp
 from Controllers.predict import receive_data
 from Controllers.train import train_data
 from Controllers.error import page_not_found
-
+from Controllers.get_temp import get_temp
 app = Flask(__name__)
 CORS(app)
 
@@ -44,6 +44,11 @@ def route_train_data():
 @app.route('/add-temp', methods=['POST'])
 def route_add_temp():
     return add_temp()
+
+
+@app.route('/get_temp', methods=['GET'])
+def route_get_temp():
+    return get_temp()
 
 
 @app.errorhandler(404)
