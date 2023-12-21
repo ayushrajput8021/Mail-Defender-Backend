@@ -69,5 +69,5 @@ def get_temp_data():
 def temp_to_main():
     response = supabase.table('temp-data').select('*').execute()
     for x in response.data:
-        supabase.table('test_main_data').insert({"Category": x['Category'], "Message": x['Message']}).execute()
+        supabase.table('main_data').insert({"Category": x['Category'], "Message": x['Message']}).execute()
 
