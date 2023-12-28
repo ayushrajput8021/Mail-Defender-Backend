@@ -70,4 +70,5 @@ def temp_to_main():
     response = supabase.table('temp-data').select('*').execute()
     for x in response.data:
         supabase.table('main_data').insert({"Category": x['Category'], "Message": x['Message']}).execute()
-
+    supabase.table('temp-data').delete().eq('Category', 1).execute()
+    supabase.table('temp-data').delete().eq('Category', 0).execute()
